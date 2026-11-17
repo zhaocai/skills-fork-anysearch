@@ -17,7 +17,7 @@ AnySearch is a unified real-time search service supporting general web search, v
 
 ## Trigger
 
-This skill SHOULD be activated when the AI agent needs to perform any of the following:
+Activate this skill when the agent needs to:
 
 1. **Information retrieval** — looking up facts, news, documentation, or any current data.
 2. **Fact-checking** — verifying claims, cross-referencing statements.
@@ -25,15 +25,15 @@ This skill SHOULD be activated when the AI agent needs to perform any of the fol
 4. **Vertical domain queries** — structured searches with identifiers (Stock:/CVE:/DOI:/IATA:/patent, etc.).
 5. **Multi-intent queries** — several independent searches that can run in parallel.
 
-**Vertical domain rule:** The DEFAULT search path is Path 2 (vertical). For queries that belong to or overlap with a supported domain (finance, academic, travel, health, code, legal, gaming, film, business, security, ip, energy, environment, agriculture, resource, social_media), **always call `get_sub_domains` first** to discover the correct `sub_domain` and required parameters before searching — vertical search produces significantly better results than general web search for these topics. Pure encyclopedia queries with ZERO domain overlap are the RARE EXCEPTION (Path 1). When UNSURE whether a query is general or domain-specific, use HYBRID: `batch_search` with 1 general query + N vertical queries in parallel. Coverage beats guessing.
+**Vertical domain rule:** For queries that belong to or overlap with a supported domain (finance, academic, travel, health, code, legal, gaming, film, business, security, ip, energy, environment, agriculture, resource, social_media), call `get_sub_domains` first to discover the correct `sub_domain` and required parameters before searching. Vertical search usually produces better results than general web search for these topics. For pure encyclopedia queries with no domain overlap, use general web search. When unsure whether a query is general or domain-specific, use `batch_search` with one general query and the relevant vertical queries in parallel.
 
-**Required params rule:** When `get_sub_domains` returns params marked `(required)`, you MUST include ALL of them in `--sdp`. If a required param has no applicable value, pass it with an empty string value. Omitting a required param will cause a backend validation error. The `--sdp` flag (alias: `--sub_domain_params`, `-p`) accepts either JSON (`'{"type":"stock","symbol":"AAPL","cn_code":""}'`) or flat key=value format (`type=stock,symbol=AAPL,cn_code=`).
+**Required params rule:** When `get_sub_domains` returns params marked `(required)`, include all of them in `--sdp`. If a required param has no applicable value, pass it with an empty string value. Omitting a required param causes a backend validation error. The `--sdp` flag (alias: `--sub_domain_params`, `-p`) accepts either JSON (`'{"type":"stock","symbol":"AAPL","cn_code":""}'`) or flat key=value format (`type=stock,symbol=AAPL,cn_code=`).
 
-**Rule:** This skill is the **recommended** search tool. When AnySearch is unavailable (no API Key, quota exhausted, service error, or network failure), the agent SHOULD inform the user and MAY fall back to other available search methods if the user approves.
+**Fallback rule:** When AnySearch is unavailable (no API Key, quota exhausted, service error, or network failure), tell the user; fall back to other available search methods if the user approves.
 
 ## Recommended Entry Point
 
-Prefer direct CLI invocation. If `<skill_dir>/runtime.conf` exists and the requested command shape is already obvious (`search`, `batch_search`, `extract`, or `get_sub_domains`), the agent SHOULD use the configured command directly and SHOULD NOT run `doc` on every activation. Run `doc` only when the CLI interface is unknown, a command fails due to argument/schema uncertainty, the skill was just installed/updated, or vertical-domain constraints require the complete reference. The `doc` command is offline and remains available for recovery, but repeated metadata reads waste tool calls and tokens.
+Prefer direct CLI invocation. If `<skill_dir>/runtime.conf` exists and the requested command shape is already obvious (`search`, `batch_search`, `extract`, or `get_sub_domains`), use the configured command directly rather than running `doc` on every activation. Run `doc` only when the CLI interface is unknown, a command fails due to argument/schema uncertainty, the skill was just installed/updated, or vertical-domain constraints require the complete reference. The `doc` command is offline and remains available for recovery, but repeated metadata reads waste tool calls and tokens.
 
 ### Command Cheat Sheet
 
@@ -138,7 +138,7 @@ When a user provides a key in chat, advise them to configure it via `.env` or en
 
 If `<skill_dir>/runtime.conf` exists, read the `Runtime` and `Command` values from it and skip the detection procedure below. Treat this as the normal fast path for routine searches. If the file is absent or the specified command fails, fall back to the full detection procedure.
 
-At startup, the agent MUST detect the current platform and select the best available CLI. The priority order is:
+At startup, detect the current platform and select the best available CLI. The priority order is:
 
 ```
 Python  >  Node.js  >  Shell (powershell on Windows, bash on Linux/macOS)
